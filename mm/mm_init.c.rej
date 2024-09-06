@@ -1,0 +1,20 @@
+--- mm/mm_init.c
++++ mm/mm_init.c
+@@ -1384,6 +1384,17 @@ static void __meminit zone_init_internals(struct zone *zone, enum zone_type idx,
+ static void __meminit zone_init_free_lists(struct zone *zone)
+ {
+ 	unsigned int order, t;
++
++#ifdef CONFIG_CGROUP_PALLOC
++	int c;
++
++	for (c = 0; c < MAX_PALLOC_BINS; c++) {
++		INIT_LIST_HEAD(&zone->color_list[c]);
++	}
++
++	bitmap_zero(zone->color_bitmap, MAX_PALLOC_BINS);
++#endif /* CONFIG_CGROUP_PALLOC */
++
+ 	for_each_migratetype_order(order, t) {
+ 		INIT_LIST_HEAD(&zone->free_area[order].free_list[t]);
+ 		zone->free_area[order].nr_free = 0;

@@ -1,0 +1,24 @@
+--- mm/page_alloc.c
++++ mm/page_alloc.c
+@@ -51,6 +51,7 @@
+ #include <linux/lockdep.h>
+ #include <linux/psi.h>
+ #include <linux/khugepaged.h>
++#include <linux/debugfs.h>
+ #include <linux/delayacct.h>
+ #include <asm/div64.h>
+ #include "internal.h"
+@@ -3316,7 +3838,13 @@ struct page *rmqueue(struct zone *preferred_zone,
+ 	 */
+ 	WARN_ON_ONCE((gfp_flags & __GFP_NOFAIL) && (order > 1));
+ 
++#ifdef CONFIG_CGROUP_PALLOC
++	ph = ph_from_subsys(current->cgroups->subsys[palloc_cgrp_id]);
++	/* Skip PCP when physical memory aware allocation is requested */
++	if (likely(pcp_allowed_order(order)) && !ph) {
++#else
+ 	if (likely(pcp_allowed_order(order))) {
++#endif
+ 		page = rmqueue_pcplist(preferred_zone, zone, order,
+ 				       migratetype, alloc_flags);
+ 		if (likely(page))
